@@ -101,7 +101,7 @@ jobs:
       - if: steps.cache.outputs.cache-hit != 'true'
         uses: jdx/mise-action@v3.5.1
         with:
-          version: 2025.11.2
+          version: 2025.12.12
           cache_save: ${{ needs.setup.outputs.is-default-branch }}
           mise_toml: |
             [tools]
@@ -143,7 +143,7 @@ jobs:
       - &mise
         uses: jdx/mise-action@v3.5.1
         with:
-          version: 2025.11.2
+          version: 2025.12.12
           cache_save: ${{ needs.setup.outputs.is-default-branch }}
           mise_toml: |
             [tools]
@@ -267,7 +267,7 @@ jobs:
       - *checkout
       - uses: jdx/mise-action@v3.5.1
         with:
-          version: 2025.11.2
+          version: 2025.12.12
           cache_save: ${{ needs.setup.outputs.is-default-branch }}
           mise_toml: |
             [tools]
@@ -313,7 +313,7 @@ jobs:
       - if: steps.cache.outputs.cache-hit != 'true'
         uses: jdx/mise-action@v3.5.1
         with:
-          version: 2025.11.2
+          version: 2025.12.12
           cache_save: ${{ needs.setup.outputs.is-default-branch }}
           mise_toml: |
             [tools]
@@ -352,7 +352,7 @@ jobs:
       - if: steps.cache.outputs.cache-hit != 'true'
         uses: jdx/mise-action@v3.5.1
         with:
-          version: 2025.11.2
+          version: 2025.12.12
           cache_save: ${{ needs.setup.outputs.is-default-branch }}
           mise_toml: |
             [tools]
@@ -498,7 +498,7 @@ jobs:
       - &mise_java_matrix_node
         uses: jdx/mise-action@v3.5.1
         with:
-          version: 2025.11.2
+          version: 2025.12.12
           cache_save: ${{ needs.setup.outputs.is-default-branch }}
           mise_toml: |
             [tools]
@@ -579,7 +579,7 @@ jobs:
         name: Setup Java and Maven
         uses: jdx/mise-action@v3.5.1
         with:
-          version: 2025.11.2
+          version: 2025.12.12
           cache_save: ${{ needs.setup.outputs.is-default-branch }}
           mise_toml: |
             [tools]
@@ -647,11 +647,22 @@ jobs:
     needs: [setup, build]
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
     container:
-      image: bash:5-alpine3.22
+      image: alpine/java:21.0.4-jdk@sha256:366ad7df4fafeca51290ccd7d6f046cf4bf3aa312e59bb191b4be543b39f25e2
     permissions: *read_permissions
+    env:
+      MISE_VERBOSE: 1
     steps:
       - *checkout
-      - *mise_java_only
+      - name: Install dependencies
+        run: apk add --no-cache curl github-cli bash
+      - name: Setup Java and Maven
+        uses: jdx/mise-action@v3.5.1
+        with:
+          version: 2025.12.12
+          cache_save: ${{ needs.setup.outputs.is-default-branch }}
+          mise_toml: |
+            [tools]
+            maven = "3.9"
       - *maven_cache
       - *download_sonarjs_m2
       - *config_maven
@@ -729,7 +740,7 @@ jobs:
           SONARSOURCE_QA: true
           SONARJS_ARTIFACT: multi
           GITHUB_TOKEN: ${{ fromJSON(steps.secrets.outputs.vault).licenses_token }}
-
+          
   plugin_qa_fast_without_node_alpine:
     runs-on: github-ubuntu-latest-m
     name: Fast QA without Node on Alpine SQ:LATEST_RELEASE
@@ -737,10 +748,19 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false
     permissions: *read_permissions
     container:
-      image: bash:5-alpine3.22
+      image: alpine/java:21.0.4-jdk@sha256:366ad7df4fafeca51290ccd7d6f046cf4bf3aa312e59bb191b4be543b39f25e2
     steps:
       - *checkout
-      - *mise_java_only
+      - name: Install dependencies
+        run: apk add --no-cache curl github-cli bash
+      - name: Setup Maven
+        uses: jdx/mise-action@v3.5.1
+        with:
+          version: 2025.12.12
+          cache_save: ${{ needs.setup.outputs.is-default-branch }}
+          mise_toml: |
+            [tools]
+            maven = "3.9"
       - *maven_cache
       - *download_sonarjs_m2
       - *config_maven
