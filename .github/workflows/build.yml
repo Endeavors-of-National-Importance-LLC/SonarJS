@@ -651,22 +651,12 @@ jobs:
     permissions: *read_permissions
     steps:
       - *checkout
-      - *mise_with_java
+      - *mise_java_only
       - *maven_cache
+      - *download_sonarjs_m2
       - *config_maven
       - *get_licenses_token
-      - *set_monthly_cache_date
-      - *remove_node_from_path
-      - name: Cache Orchestrator
-        uses: SonarSource/ci-github-actions/cache@v1
-        with:
-          path: ${{ env.ORCHESTRATOR_HOME_MONTHLY }}
-          key: orchestrator-monthly-${{ env.MONTHLY_CACHE_DATE }}
-      - name: Setup Orchestrator home directory
-        shell: bash
-        run: |
-          mkdir -p "$ORCHESTRATOR_HOME_MONTHLY"
-          echo "ORCHESTRATOR_HOME=$ORCHESTRATOR_HOME_MONTHLY" >> $GITHUB_ENV
+      - *orchestrator_cache
       - name: Run Plugin QA without Node
         run: |
           mvn package -f its/plugin/plugins/consumer-plugin/pom.xml
@@ -750,11 +740,14 @@ jobs:
       image: bash:5-alpine3.22
     steps:
       - *checkout
-      - *mise_with_java
+      - *mise_java_only
       - *maven_cache
+      - *download_sonarjs_m2
       - *config_maven
       - *get_licenses_token
-      - *remove_node_from_path
+      - uses: ./.github/actions/orchestrator-cache
+        with:
+          key-prefix: orchestrator-fast
       - name: Run Fast Plugin QA without Node
         run: |
           mvn package -f its/plugin/plugins/pom.xml --projects !org.sonarsource.javascript:eslint-custom-rules-plugin,!org.sonarsource.javascript:eslint-custom-rules-plugin-legacy
